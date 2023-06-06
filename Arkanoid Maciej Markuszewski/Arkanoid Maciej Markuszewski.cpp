@@ -36,14 +36,14 @@ class Player {
 public:
 
 	Point Position;
-	int Floor;
-	int Plus;
+	int Floor; // rename to isTouchingFloor, isStanding?
+	int Plus; // ???
 	int Points;
-	bool FacingRight;
-	bool HoldingKey;
+	bool FacingRight; // isFacingRight? or enum direction: left, right. Then var should be enum direction; or enum facingDirection; 
+	bool HoldingKey; // isHoldingKey?
 	int JumpVelocity;
 	Rectangle Hitbox;
-	Point Drawing;
+	Point Drawing; // u mean sprite? 
 
 	Player() = default;
 
@@ -55,11 +55,11 @@ public:
 
 class Projectile {
 
-public:
+public: // what about pressing tab here to make indentation? 
 
 	Point Position;
 	Point Target;
-	bool Friendly;
+	bool Friendly; // isFriendly ? 
 
 	Projectile() = default;
 
@@ -78,7 +78,7 @@ public:
 	int width;
 	int height;
 
-	void Load(string p) {
+	void Load(string p) { // assetName? 
 		path = "assets/" + p + ".png";
 		sprite = createSprite(path.c_str());
 		getSpriteSize(sprite, width, height);
@@ -89,7 +89,7 @@ public:
 
 // Returns true if two rectangles (l1, r1) and (l2, r2)
 // overlap
-bool doOverlap(Point l1, Point r1, Point l2, Point r2)
+bool doOverlap(Point l1, Point r1, Point l2, Point r2) // isOverlaping? 
 {
 	// if rectangle has area 0, no overlap
 	if (l1.x == r1.x || l1.y == r1.y || r2.x == l2.x || l2.y == r2.y)
@@ -106,12 +106,12 @@ bool doOverlap(Point l1, Point r1, Point l2, Point r2)
 	return true;
 }
 
-void CreatePlatformRow(string* Column, int size, int platforms, int monsters) {
+void CreatePlatformRow(string* Column, int size, int platforms, int monsters) { //column lowercase or should it be uppercase cuz its a pointer? dunno, just asking
 	bool failed = true;
 	for (int i = 0; i < size; i++) {
 		if (rand() % 100 >= platforms) {
 			if (rand() % 100 >= monsters) {
-				Column[i] = "2";
+				Column[i] = "2"; // Why u keep it as string if its a number? xD
 			}
 			else
 			{
@@ -208,7 +208,7 @@ public:
 	}
 
 	virtual bool Tick() {
-		drawSprite(GBackground.sprite, 0, 0);
+		drawSprite(GBackground.sprite, 0, 0); // do we need to draw it every time or iths there if u draw it once? what happens to old background? 
 		if (getTickCount() % 8 == 0) {
 			if (player.HoldingKey) {
 				player.Position.x += player.FacingRight ? 10 : -10;
