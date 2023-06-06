@@ -208,6 +208,17 @@ public:
 	}
 
 	virtual bool Tick() {
+		// you can make it work at the FPS rate you want
+		// how? create timer, save time after you execute if below
+		//run if not every 8 thics but when time from last succesfull tick is 1/60 of a second or smth
+		// it should make this game more stable and i think this may be main issue with perf
+		// also u can make to different ticks one for getting input and calculating phisics which shouldnt be related to performance and second, displaying sprites which can be related to perf
+
+		// you have much loops running every 8 ticks, i immagine it may be some ridiculous number of ticks per second like 500 or 5k and we try to do everything here, 
+		//i think we should consider moving something out of main loop
+		
+		// btw this funct is definetelly too long i looked at it, you should break it to smth like 7 functions
+
 		drawSprite(GBackground.sprite, 0, 0); // do we need to draw it every time or iths there if u draw it once? what happens to old background? 
 		if (getTickCount() % 8 == 0) {
 			if (player.HoldingKey) {
@@ -325,7 +336,7 @@ public:
 		else {
 			drawSprite(player.FacingRight ? GPlayerR.sprite : GPlayerL.sprite, player.Position.x + player.Drawing.x, WindowHeight - GPlatform.height + player.Drawing.y - player.Position.y - view);
 		}
-		drawSprite(GScores.sprite, 0, 0);
+		drawSprite(GScores.sprite, 0, 0); // maybe we need to draw it only when it changed? 
 		string floor = to_string(player.Floor);
 		for (int i = 0; i < floor.length(); i++) {
 			for (int j = 0; j < 10; j++) {
