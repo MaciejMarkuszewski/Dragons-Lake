@@ -18,15 +18,152 @@
     <ClCompile Include="Arkanoid Maciej Markuszewski.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Point.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Rectangle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Asset.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Projectile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StationaryObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Turret.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Ability.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Monster.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\2022_win64\2022_win64\Framework.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Point.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Rectangle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Asset.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Facing.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AbilityType.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Projectile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StationaryObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Turret.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Ability.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Monster.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="data\all.png">
+    <Image Include="assets\0.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="assets\1.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\2.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\3.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\4.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\5.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\6.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\7.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\8.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\9.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\Add.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\AutoShooter.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\Background.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\Friendly.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\Hostile.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\Monster.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\Platform.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\PlayerJumpingL.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\PlayerJumpingR.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\PlayerL.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\PlayerR.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\Scores.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\test.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\Turret.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="FrameworkRelease_x64.dll" />
+    <None Include="libjpeg-9.dll" />
+    <None Include="libpng16-16.dll" />
+    <None Include="SDL2.dll" />
+    <None Include="SDL2_image.dll" />
+    <None Include="zlib1.dll" />
   </ItemGroup>
 </Project>
