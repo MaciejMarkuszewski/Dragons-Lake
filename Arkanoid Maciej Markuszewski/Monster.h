@@ -6,5 +6,5 @@ public:
 
 	Monster();
 
-	Monster(Point Tile, Asset aObject);
+	Monster(Point tile, Asset aObject);
 };

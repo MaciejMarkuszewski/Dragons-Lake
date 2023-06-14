@@ -2,7 +2,7 @@
 
 Ability::Ability() = default;
 
-Ability::Ability(Point Tile, Asset aObject, AbilityType type)
-	: StationaryObject(Tile, aObject), type(type)
+Ability::Ability(Point tile, Asset aObject, AbilityType type)
+	: StationaryObject(tile, aObject), type(type)
 {
 }

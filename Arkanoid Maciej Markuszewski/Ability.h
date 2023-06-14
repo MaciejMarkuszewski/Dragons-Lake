@@ -9,6 +9,6 @@ public:
 
 	Ability();
 
-	Ability(Point Tile, Asset aObject, AbilityType type);
+	Ability(Point tile, Asset aObject, AbilityType type);
 };
 

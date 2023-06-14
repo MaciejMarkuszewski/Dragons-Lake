@@ -8,5 +8,7 @@ struct Rectangle {
 	Rectangle();
 
 	Rectangle(Point l, Point r);
+
+	bool doOverlap(Rectangle secondRectanle);
 };
 

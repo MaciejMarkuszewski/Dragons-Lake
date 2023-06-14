@@ -18,5 +18,7 @@ public:
 	Rectangle getHitbox();
 
 	Point getSpritePosition(Asset aPlatform, int windowHeight, int view);
+
+	void updatePosition(int windowWidth);
 };
 

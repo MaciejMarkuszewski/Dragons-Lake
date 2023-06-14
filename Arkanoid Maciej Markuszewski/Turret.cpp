@@ -2,7 +2,7 @@
 
 Turret::Turret() = default;
 
-Turret::Turret(Point Tile, Asset aObject, unsigned int shootingCooldown)
-	: StationaryObject(Tile, aObject), shootingCooldown(shootingCooldown)
+Turret::Turret(Point tile, Asset aObject, unsigned int shootingCooldown)
+	: StationaryObject(tile, aObject), shootingCooldown(shootingCooldown)
 {
 }

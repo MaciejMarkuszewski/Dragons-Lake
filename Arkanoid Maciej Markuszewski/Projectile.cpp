@@ -14,3 +14,16 @@ Rectangle Projectile::getHitbox() {
 Point Projectile::getSpritePosition(Asset aPlatform, int windowHeight, int view) {
 	return Point(position.x - aProjectile.width / 2, windowHeight - position.y - aProjectile.height / 2 - aPlatform.height - view);
 }
+
+void Projectile::updatePosition(int windowWidth) {
+	position.x += target.x;
+	position.y += target.y;
+	if (position.x >= windowWidth)
+	{
+		position.x -= windowWidth;
+	}
+	if (position.x < 0)
+	{
+		position.x += windowWidth;
+	}
+}

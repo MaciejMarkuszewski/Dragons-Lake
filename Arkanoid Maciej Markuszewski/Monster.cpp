@@ -2,7 +2,7 @@
 
 Monster::Monster() = default;
 
-Monster::Monster(Point Tile, Asset aObject)
-	: StationaryObject(Tile, aObject)
+Monster::Monster(Point tile, Asset aObject)
+	: StationaryObject(tile, aObject)
 {
 }

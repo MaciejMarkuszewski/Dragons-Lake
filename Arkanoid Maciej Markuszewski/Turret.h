@@ -8,6 +8,6 @@ public:
 
 	Turret();
 
-	Turret(Point Tile, Asset aObject, unsigned int shootingCooldown);
+	Turret(Point tile, Asset aObject, unsigned int shootingCooldown);
 };
 

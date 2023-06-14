@@ -11,11 +11,11 @@
 #include <deque>
 using namespace std;
 
-#define GAME_TICK 20 // in ms
+#define GAME_TICK 20 // in ms = 1000/FPS
 #define THRESHOLD 1000
-#define PLATFORM_DENSITY 750
-#define MONSTERS_DENSITY 950
-#define TURRETS_DENSITY 995
+#define PLATFORM_DENSITY 750 // 20% empty platforms
+#define MONSTERS_DENSITY 950 // 4,5% monsters
+#define TURRETS_DENSITY 995 // 0,5% turrets
 #define CHECKPOINT 100
 #define BASE_ABILITY_COOLDOWN 15000 // in ms
 #define ADDITIONAL_ABILITY_COOLDOWN 15000 // in ms
@@ -35,59 +35,6 @@ using namespace std;
 #define SCORES_HORIZONTAL_OFFSET 100 // in pixels
 #define DIGITS 10
 #define ASCII 48
-
-// Returns true if two rectangles (one.l, one.r) and (two.l, two.r) overlap
-bool doOverlap(Rectangle one, Rectangle two)
-{
-	// if rectangle has area 0, no overlap
-	if (one.l.x == one.r.x || one.l.y == one.r.y || two.l.x == two.r.x || two.l.y == two.r.y) {
-		return false;
-	}
-	// If one rectangle is on left side of other
-	if (one.l.x > two.r.x || two.l.x > one.r.x) {
-		return false;
-	}
-	// If one rectangle is above other
-	if (one.r.y > two.l.y || two.r.y > one.l.y) {
-		return false;
-	}
-	return true;
-}
-
-//Creates platform row with average:
-//platforms / THRESHOLD empty spaces
-//(monsters - platforms) / THRESHOLD platforms
-//(turrets - monsters) / THRESHOLD monsters
-//(THRESHOLD - turrets) / THRESHOLD turrets
-void createPlatformRow(int* pColumn, int platforms, int monsters, int turrets)
-{
-	bool failed = true;
-	for (int i = 0; i < COLUMNS; i++) {
-		int random = rand() % THRESHOLD;
-		//no platform created
-		if (random < platforms) {
-			pColumn[i] = 0;
-		}
-		//empty platform created
-		else if (random < monsters) {
-			pColumn[i] = 1;
-			failed = false;
-		}
-		//platform with monster created
-		else if (random < turrets) {
-			pColumn[i] = 2;
-			failed = false;
-		}
-		//platform with turret created
-		else {
-			pColumn[i] = 3;
-		}
-	}
-	//create platform if only platforms that were created had turret, so row is not empty/hard
-	if (failed) {
-		pColumn[rand() % COLUMNS] = 1;
-	}
-}
 
 /* Test Framework realization */
 class MyFramework : public Framework {
@@ -128,6 +75,49 @@ public:
 	deque <Turret> Turrets;
 	deque <Ability> Abilities;
 
+	virtual void PreInit(int& width, int& height, bool& fullscreen)
+	{
+		width = WINDOW_WIDTH;
+		height = WINDOW_HEIGHT;
+		fullscreen = FULLSCREEN;
+	}
+
+	virtual bool Init()
+	{
+		//Load Assets
+		aPlatform.load("Platform");
+		aPlayerL.load("PlayerL");
+		aPlayerR.load("PlayerR");
+		aPlayerJumpingL.load("PlayerJumpingL");
+		aPlayerJumpingR.load("PlayerJumpingR");
+		aBackground.load("Background");
+		aScores.load("Scores");
+		aAdd.load("Add");
+		aFriendly.load("Friendly");
+		aHostile.load("Hostile");
+		aTurret.load("Turret");
+		aMonster.load("Monster");
+		aAutoShooter.load("AutoShooter");
+		for (int i = 0; i < DIGITS; i++)
+		{
+			aDigits[i].load(to_string(i));
+		}
+
+		getScreenSize(windowWidth, windowHeight);
+		tileSize = aPlatform.width;
+
+
+		static int rows[ROWS][COLUMNS];
+		for (int row = 0; row < ROWS; row++)
+		{
+			Platforms.push_back(rows[row]);
+		}
+
+		reset();
+
+		return true;
+	}
+
 	//Resets game to starting state on Init() or after meeting game over conditions
 	void reset()
 	{
@@ -145,23 +135,129 @@ public:
 		nextAbility = getTickCount() + BASE_ABILITY_COOLDOWN + (rand() % ADDITIONAL_ABILITY_COOLDOWN);
 	}
 
-	//Updates player position every GAME_TICK
-	void updatePlayerPosition()
+	//Creates platform row with average:
+	//platforms / THRESHOLD empty spaces
+	//(monsters - platforms) / THRESHOLD platforms
+	//(turrets - monsters) / THRESHOLD monsters
+	//(THRESHOLD - turrets) / THRESHOLD turrets
+	void createPlatformRow(int* pColumn, int platforms, int monsters, int turrets)
 	{
-		if (player.isHoldingKey)
-		{
-			player.position.x += player.facingDirection == RIGHT ? HORIZONTAL_SPEED : -HORIZONTAL_SPEED;
+		bool failed = true;
+		for (int i = 0; i < COLUMNS; i++) {
+			int random = rand() % THRESHOLD;
+			//no platform created
+			if (random < platforms) {
+				pColumn[i] = 0;
+			}
+			//empty platform created
+			else if (random < monsters) {
+				pColumn[i] = 1;
+				failed = false;
+			}
+			//platform with monster created
+			else if (random < turrets) {
+				pColumn[i] = 2;
+				failed = false;
+			}
+			//platform with turret created
+			else {
+				pColumn[i] = 3;
+			}
 		}
-		if (player.position.x >= windowWidth)
-		{
-			player.position.x -= windowWidth;
+		//create platform if only platforms that were created had turret, so row is not empty/hard
+		if (failed) {
+			pColumn[rand() % COLUMNS] = 1;
 		}
-		if (player.position.x < 0)
-		{
-			player.position.x += windowWidth;
+	}
+
+	virtual void Close()
+	{
+
+	}
+
+	virtual bool Tick()
+	{
+		if (getTickCount() >= previousTick + GAME_TICK) {
+			checkHitboxes();
+			player.updatePosition(HORIZONTAL_SPEED,windowWidth);
+			updateView();
+			updateProjectilesPosition();
+			updateShooting();
+			previousTick = getTickCount();
 		}
-		player.position.y += player.jumpVelocity;
-		player.jumpVelocity--;
+		drawSprites();
+		return false;
+	}
+
+	//Check hitboxes between:
+	//Every ability pickup and player
+	//Every friendly projectile with every monster
+	//Every hostile projectile with player
+	//Player with every monster
+	//Player with bottom game border
+	void checkHitboxes()
+	{
+		//Every ability pickup and player
+		for (int i = 0; i < Abilities.size(); i++)
+		{
+			if (player.getHitbox().doOverlap(Abilities[i].getHitbox(tileSize, player.jumpedBy)))
+			{
+				player.currentAbility = AUTOSHOOTER;
+				player.abilityDuration = getTickCount() + AUTO_SHOOTER_DURATION;
+				Platforms[Abilities[i].tile.y][Abilities[i].tile.x] = 1;
+				Abilities.erase(Abilities.begin() + i);
+			}
+		}
+		for (int i = Projectiles.size() - 1; i >= 0; i--)
+		{
+			//Every friendly projectile with every monster
+			if (Projectiles[i].isFriendly)
+			{
+				for (int j = 0; j < Monsters.size(); j++)
+				{
+					if (Projectiles[i].getHitbox().doOverlap(Monsters[j].getHitbox(tileSize, player.jumpedBy)))
+					{
+						Platforms[Monsters[j].tile.y][Monsters[j].tile.x] = 1;
+						Monsters.erase(Monsters.begin() + j);
+						Projectiles.erase(Projectiles.begin() + i);
+						break;
+					}
+				}
+			}
+			//Every hostile projectile with player
+			else
+			{
+				//Game over conditions
+				if (player.getHitbox().doOverlap(Projectiles[i].getHitbox()))
+				{
+					reset();
+					return;
+				}
+			}
+		}
+		//Player with every monster
+		for (int i = 0; i < Monsters.size(); i++)
+		{
+			if (player.getHitbox().doOverlap(Monsters[i].getHitbox(tileSize, player.jumpedBy)))
+			{
+				if (player.position.y >= Monsters[i].tile.y * tileSize && player.jumpVelocity <= 0)
+				{
+					Platforms[Monsters[i].tile.y][Monsters[i].tile.x] = 1;
+					Monsters.erase(Monsters.begin() + i);
+				}
+				//Game over conditions
+				else
+				{
+					reset();
+					return;
+				}
+			}
+		}
+		//Player with bottom game border. Game over conditions
+		if (player.position.y < 0)
+		{
+			reset();
+		}
 	}
 
 	//Updates offset between camera view and objects
@@ -236,11 +332,14 @@ public:
 		if (player.jumpVelocity < 0)
 		{
 			int row = (player.position.y + aPlatform.height) / tileSize;
-			if (abs(player.position.y - row * tileSize + aPlatform.height / 2) <= aPlatform.height / 2 && (Platforms[row][(player.getHitbox().l.x) / tileSize] != 0 || Platforms[row][(player.getHitbox().r.x) / tileSize] != 0))
+			if (abs(player.position.y - row * tileSize + aPlatform.height / 2) <= aPlatform.height / 2 && (Platforms[row][player.getHitbox().l.x / tileSize] != 0 || Platforms[row][player.getHitbox().r.x / tileSize] != 0))
 			{
 				player.jumpVelocity = VERTICAL_SPEED;
 				player.jumpedBy = row;
-				player.platformsTouched++;
+				if ((Platforms[row][player.getHitbox().l.x / tileSize] != 0 && Platforms[row][player.getHitbox().r.x / tileSize] != 0) && player.getHitbox().l.x / tileSize != player.getHitbox().r.x / tileSize) {
+					player.platformsTouchedCount++;
+				}
+				player.platformsTouchedCount++;
 				view = row * tileSize;
 				player.position.y = 0;
 				for (int i = 0; i < Projectiles.size(); i++)
@@ -277,8 +376,8 @@ public:
 			{
 				if (Monsters[i].tile.y < PLATFORMS_ON_SCREEN)
 				{
-					float distance = sqrt(pow((Monsters[i].getShootingPosition(tileSize).x - player.getShootingPosition().x), 2) + pow(Monsters[i].getShootingPosition(tileSize).x - player.getShootingPosition().y, 2));
-					Projectile friendly = Projectile(player.getShootingPosition(), Point((Monsters[i].getShootingPosition(tileSize).x - player.getShootingPosition().x) / distance * PROJECTILE_SPEED, (Monsters[i].getShootingPosition(tileSize).x - player.getShootingPosition().y) / distance * PROJECTILE_SPEED), true, aFriendly);
+					float distance = sqrt(pow((Monsters[i].getShootingPosition(tileSize).x - player.getShootingPosition().x), 2) + pow(Monsters[i].getShootingPosition(tileSize).y - player.getShootingPosition().y, 2));
+					Projectile friendly = Projectile(player.getShootingPosition(), Point((Monsters[i].getShootingPosition(tileSize).x - player.getShootingPosition().x) / distance * PROJECTILE_SPEED, (Monsters[i].getShootingPosition(tileSize).y - player.getShootingPosition().y) / distance * PROJECTILE_SPEED), true, aFriendly);
 					Projectiles.push_back(friendly);
 				}
 				else
@@ -300,92 +399,12 @@ public:
 	{
 		for (int i = Projectiles.size() - 1; i >= 0; i--)
 		{
-			Projectiles[i].position.x += Projectiles[i].target.x;
-			Projectiles[i].position.y += Projectiles[i].target.y;
-			if (Projectiles[i].position.x >= windowWidth)
-			{
-				Projectiles[i].position.x -= windowWidth;
-			}
-			if (Projectiles[i].position.x < 0)
-			{
-				Projectiles[i].position.x += windowWidth;
-			}
+			Projectiles[i].updatePosition(windowWidth);
 			if (abs(Projectiles[i].position.y - windowHeight / 2) > windowHeight / 2 && view == 0)
 			{
 				Projectiles.erase(Projectiles.begin() + i);
 				continue;
 			}
-		}
-	}
-
-	//Check hitboxes between:
-	//Every ability pickup and player
-	//Every friendly projectile with every monster
-	//Every hostile projectile with player
-	//Player with every monster
-	//Player with bottom game border
-	void checkHitboxes()
-	{
-		//Every ability pickup and player
-		for (int i = 0; i < Abilities.size(); i++)
-		{
-			if (doOverlap(player.getHitbox(), Abilities[i].getHitbox(tileSize, player.jumpedBy)))
-			{
-				player.currentAbility = AUTOSHOOTER;
-				player.abilityDuration = getTickCount() + AUTO_SHOOTER_DURATION;
-				Platforms[Abilities[i].tile.y][Abilities[i].tile.x] = 1;
-				Abilities.erase(Abilities.begin() + i);
-			}
-		}
-		for (int i = Projectiles.size() - 1; i >= 0; i--)
-		{
-			//Every friendly projectile with every monster
-			if (Projectiles[i].isFriendly)
-			{
-				for (int j = 0; j < Monsters.size(); j++)
-				{
-					if (doOverlap(Projectiles[i].getHitbox(), Monsters[j].getHitbox(tileSize, player.jumpedBy)))
-					{
-						Platforms[Monsters[j].tile.y][Monsters[j].tile.x] = 1;
-						Monsters.erase(Monsters.begin() + j);
-						Projectiles.erase(Projectiles.begin() + i);
-						break;
-					}
-				}
-			}
-			//Every hostile projectile with player
-			else
-			{
-				//Game over conditions
-				if (doOverlap(player.getHitbox(), Projectiles[i].getHitbox()))
-				{
-					reset();
-					return;
-				}
-			}
-		}
-		//Player with every monster
-		for (int i = 0; i < Monsters.size(); i++)
-		{
-			if (doOverlap(player.getHitbox(), Monsters[i].getHitbox(tileSize, player.jumpedBy)))
-			{
-				if (player.position.y >= Monsters[i].tile.y * tileSize && player.jumpVelocity <= 0)
-				{
-					Platforms[Monsters[i].tile.y][Monsters[i].tile.x] = 1;
-					Monsters.erase(Monsters.begin() + i);
-				}
-				//Game over conditions
-				else
-				{
-					reset();
-					return;
-				}
-			}
-		}
-		//Player with bottom game border. Game over conditions
-		if (player.position.y < 0)
-		{
-			reset();
 		}
 	}
 
@@ -397,6 +416,7 @@ public:
 	//Player
 	//Scoreboard
 	//Scores
+	//Active ability
 	void drawSprites()
 	{
 		//Background
@@ -415,15 +435,15 @@ public:
 						StationaryObject object;
 						switch (Platforms[row][column])
 						{
-							case 2:
-								object = StationaryObject(Point(column, row), aMonster);
-								break;
-							case 3:
-								object = StationaryObject(Point(column, row), aTurret);
-								break;
-							case 4:
-								object = StationaryObject(Point(column, row), aAutoShooter);
-								break;
+						case 2:
+							object = StationaryObject(Point(column, row), aMonster);
+							break;
+						case 3:
+							object = StationaryObject(Point(column, row), aTurret);
+							break;
+						case 4:
+							object = StationaryObject(Point(column, row), aAutoShooter);
+							break;
 						}
 						drawSprite(object.aObject.pSprite, object.getSpritePosition(aPlatform, windowHeight, view, tileSize, player.jumpedBy).x, object.getSpritePosition(aPlatform, windowHeight, view, tileSize, player.jumpedBy).y);
 					}
@@ -444,9 +464,9 @@ public:
 		{
 			drawSprite(player.facingDirection == RIGHT ? aPlayerR.pSprite : aPlayerL.pSprite, player.getSpritePosition(aPlatform, windowHeight, view).x, player.getSpritePosition(aPlatform, windowHeight, view).y);
 		}
-		//Scoreboard
+		//Scoreboard - I wasn't sure how to interpret: "You should show both the distance the player passed and the number of platforms. Distance might be measured in pixels or abstract units.", so I coded it this way:
 		drawSprite(aScores.pSprite, 0, 0);
-		//Scores
+		//Distance in (player.highestFloor + player.jumpedBy). If multiplied by tileSize = distance in pixels
 		string floor = to_string(player.highestFloor);
 		for (int i = 0; i < floor.length(); i++)
 		{
@@ -471,7 +491,8 @@ public:
 				}
 			}
 		}
-		string points = to_string(player.platformsTouched);
+		//Number of platforms player jumped on
+		string points = to_string(player.platformsTouchedCount);
 		for (int i = 0; i < points.length(); i++)
 		{
 			for (int j = 0; j < DIGITS; j++)
@@ -483,68 +504,10 @@ public:
 				}
 			}
 		}
-	}
-
-	virtual void PreInit(int& width, int& height, bool& fullscreen)
-	{
-		width = WINDOW_WIDTH;
-		height = WINDOW_HEIGHT;
-		fullscreen = FULLSCREEN;
-	}
-
-	virtual bool Init()
-	{
-		//Load Assets
-		aPlatform.load("Platform");
-		aPlayerL.load("PlayerL");
-		aPlayerR.load("PlayerR");
-		aPlayerJumpingL.load("PlayerJumpingL");
-		aPlayerJumpingR.load("PlayerJumpingR");
-		aBackground.load("Background");
-		aScores.load("Scores");
-		aAdd.load("Add");
-		aFriendly.load("Friendly");
-		aHostile.load("Hostile");
-		aTurret.load("Turret");
-		aMonster.load("Monster");
-		aAutoShooter.load("AutoShooter");
-		for (int i = 0; i < DIGITS; i++)
-		{
-			aDigits[i].load(to_string(i));
+		//Active ability
+		if (player.currentAbility == AUTOSHOOTER) {
+			drawSprite(aAutoShooter.pSprite, windowWidth / 2 - aAutoShooter.width / 2, 0);
 		}
-
-		getScreenSize(windowWidth, windowHeight);
-		tileSize = aPlatform.width;
-
-
-		static int rows[ROWS][COLUMNS];
-		for (int row = 0; row < ROWS; row++)
-		{
-			Platforms.push_back(rows[row]);
-		}
-
-		reset();
-
-		return true;
-	}
-
-	virtual void Close()
-	{
-
-	}
-
-	virtual bool Tick()
-	{
-		if (getTickCount() >= previousTick + GAME_TICK) {
-			checkHitboxes();
-			previousTick = getTickCount();
-			updatePlayerPosition();
-			updateView();
-			updateProjectilesPosition();
-			updateShooting();
-		}
-		drawSprites();
-		return false;
 	}
 
 	virtual void onMouseMove(int x, int y, int xrelative, int yrelative)
@@ -557,8 +520,8 @@ public:
 	{
 		if (button == FRMouseButton::LEFT && !isReleased && getTickCount() >= player.shootingCooldown)
 		{
-			float distance = sqrt(pow((cursor.x - player.position.x), 2) + pow(windowHeight - cursor.y - player.position.y - aPlatform.height - view, 2));
-			Projectile friendly = Projectile(player.getShootingPosition(), Point((cursor.x - player.position.x) / distance * PROJECTILE_SPEED, (windowHeight - cursor.y - player.position.y - aPlatform.height - view) / distance * PROJECTILE_SPEED), true, aFriendly);
+			float distance = sqrt(pow((cursor.x - player.position.x), 2) + pow(windowHeight - cursor.y - aPlatform.height - view - player.getShootingPosition().y, 2));
+			Projectile friendly = Projectile(player.getShootingPosition(), Point((cursor.x - player.position.x) / distance * PROJECTILE_SPEED, (windowHeight - cursor.y - aPlatform.height - view - player.getShootingPosition().y) / distance * PROJECTILE_SPEED), true, aFriendly);
 			Projectiles.push_back(friendly);
 			player.shootingCooldown = getTickCount() + PLAYER_COOLDOWN;
 		}

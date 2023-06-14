@@ -10,7 +10,7 @@ public:
 	Point position;
 	int highestFloor;
 	int jumpedBy;
-	int platformsTouched;
+	int platformsTouchedCount;
 	Facing facingDirection;
 	bool isHoldingKey;
 	int jumpVelocity;
@@ -28,5 +28,7 @@ public:
 	Point getSpritePosition(Asset aPlatform, int windowHeight, int view);
 
 	Point getShootingPosition();
+
+	void updatePosition(int speed, int windowWidth);
 };
 
